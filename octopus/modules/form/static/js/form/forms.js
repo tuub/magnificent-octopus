@@ -2,11 +2,43 @@ jQuery(document).ready(function($) {
     $.extend(octopus, {
         forms: {
 
+            setValue : function(params) {
+                var jqel = params.jqel;
+                var val = params.val;
+
+                // some properties we might be interested in
+                var tag = jqel.prop("tagName");
+                var type = jqel.attr("type");
+
+                // if this is a select2 select box, setting the val directly won't have the desired
+                // effect, and we want to use the select2 native method
+                if (tag && tag.toLowerCase() === "select") {
+                    var classes = jqel.attr("class").split(" ");
+                    for (var i = 0; i < classes.length; i++) {
+                        if (classes[i].lastIndexOf("select2", 0) === 0) { // startsWith in javascript :)
+                            // this is a select2 select box, so we need to use the select2 val setter
+                            jqel.select2("val", val);
+                            return;
+                        }
+                    }
+                }
+
+                // if this is a checkbox, setting the val doesn't mean anything, instead we need to
+                // set whether it is checked or not
+                if (type && type.toLowerCase() === "checkbox") {
+                    jqel.prop("checked", val);
+                }
+
+                // jquery's default value setter - will work for most form elements
+                jqel.val(val);
+            },
+
             repeat : function(params) {
 
                 var list_selector = params.list_selector;
                 var entry_prefix = params.entry_prefix;
                 var enable_remove = params.enable_remove || false;
+                var remove_behaviour = params.remove_behaviour || "hide";
                 var remove_selector = params.remove_selector;
                 var remove_callback = params.remove_callback;
 
@@ -44,28 +76,35 @@ jQuery(document).ready(function($) {
                 // append a new section with a new, higher number (and hide it)
                 $(list_selector).append(ns);
 
-                $("#" + nid).find(".form-group").each(function () {
-                    var name = $(this).find(".form-control").attr("name");
+                $("#" + nid).find(".form-control").each(function () {
+                    var name = $(this).attr("name");
                     var bits = name.split("-");
-                    bits[bits.length - 2] = max + 1;
+                    bits[1] = max + 1;
                     var newname = bits.join("-");
 
-                    $(this).find(".form-control")
-                        .attr("name", newname)
+                    $(this).attr("name", newname)
                         .attr("id", newname)
                         .val("");
-                    $(this).find("label").attr("for", newname);
+                    $("#" + nid).find("label[for=" + name + "]").attr("for", newname);
                 });
 
                 if (enable_remove) {
-                    $(remove_selector).show()
-                        .unbind("click")
+                    if (remove_behaviour === "hide") {
+                        $(remove_selector).show();
+                    } else if (remove_behaviour === "disable") {
+                        $(remove_selector).removeAttr("disabled");
+                    }
+                    $(remove_selector).unbind("click")
                         .click(function (event) {
                             event.preventDefault();
-                            $(this).parent().remove();
+                            $(this).parents(".repeatable_container").remove();
 
                             if ($(list_selector).children().size() == 1) {
-                                $(remove_selector).hide();
+                                if (remove_behaviour === "hide") {
+                                    $(remove_selector).hide();
+                                } else if (remove_behaviour === "disable") {
+                                    $(remove_selector).attr("disabled", "disabled");
+                                }
                             }
 
                             if (remove_callback) {remove_callback()}
@@ -80,6 +119,7 @@ jQuery(document).ready(function($) {
                 var entry_prefix = params.entry_prefix;
                 var enable_remove = params.enable_remove || false;
                 var remove_selector = params.remove_selector;
+                var remove_behaviour = params.remove_behaviour || "hide";
                 var before_callback = params.before_callback;
                 var more_callback = params.more_callback;
                 var remove_callback = params.remove_callback;
@@ -93,9 +133,15 @@ jQuery(document).ready(function($) {
                         list_selector : list_selector,
                         entry_prefix : entry_prefix,
                         enable_remove : enable_remove,
-                        remove_selector : remove_callback,
+                        remove_behaviour: remove_behaviour,
+                        remove_selector : remove_selector,
                         remove_callback : remove_callback
                     });
+
+                    // each time it is used, re-bind it, as there may now be more
+                    // than one "more" button
+                    $(button_selector).unbind("click");
+                    octopus.forms.bindRepeatable(params);
 
                     if (more_callback) { more_callback() }
                 })
@@ -105,6 +151,7 @@ jQuery(document).ready(function($) {
                 var form_selector = params.form_selector;
                 var formobj = params.form_data_object;
                 var xwalk = params.xwalk;
+                var record_disabled = params.record_disabled || false;
 
                 // create an object where we can read the raw form data to
                 var rawformobj = octopus.dataobj.newDataObj({allow_off_schema: true});
@@ -115,10 +162,31 @@ jQuery(document).ready(function($) {
                 // for each input field, read it into the raw form object, recording any prefixes of fields which
                 // are lists
                 $(form_selector).find(":input").each(function() {
+                    // if the field is disabled, and disabled field reading is off, skip it
+                    if ($(this).attr("disabled") && !record_disabled) {
+                        return
+                    }
+
                     var name = $(this).attr("name");
                     if (name) {
+                        // get the input type if it has one
+                        var type = $(this).attr("type");
+
+                        // get the actual value of the field
                         var val = $(this).val();
+                        var storable = false;
                         if (val) {
+                            storable = true;
+                        }
+
+                        // now adjust based on the type
+                        // if it is a checkbox, we want the boolean value, not the actual value
+                        if (type && type === "checkbox") {
+                            val = $(this).is(":checked");
+                            storable = true;
+                        }
+
+                        if (storable) {
                             var bits = name.split("-");
                             if (bits.length > 1) {
                                 if ($.inArray(bits[0], lists) === -1) {
@@ -233,24 +301,41 @@ jQuery(document).ready(function($) {
                 // now map the incoming object values to the form fields, populating their values
                 for (i = 0; i < fields.length; i++) {
                     var f = fields[i];
+
                     if ($.inArray(f, lists) === -1) {
                         // if just a flat field, just copy the value over to the element
                         var el = formstruct.get_field(f);
                         var val = formobj.get_field(f);
-                        el.val(val);
+                        octopus.forms.setValue({jqel: el, val: val});
+                        // el.val(val);
+
                     } else {
-                        // if it's a list instead, get the list of groups of fields, then for each object in
-                        // order map the values to the form elements
+                        // if it's a list instead, get the list of (groups of) fields and work through them
                         var elsetlist = formstruct.get_field(f);
-                        var objlist = formobj.get_field(f);
-                        if (objlist) {
-                            for (var j = 0; j < objlist.length; j++) {
-                                var elset = elsetlist[j];
-                                var obj = objlist[j];
-                                var subfields = Object.keys(obj);
-                                for (var k = 0; k < subfields.length; k++) {
-                                    var sf = subfields[k];
-                                    elset[sf].val(obj[sf]);
+                        var vallist = formobj.get_field(f);
+
+                        if (vallist && elsetlist) {
+                            // now we have to decide whether there are sub-fields, or just arrays of values (the difference
+                            // between a list of fields, and a list of sub-forms, with multiple fields per repeat)
+
+                            // go through each value in the value list, and determine if it is a sub-object or a
+                            // straight-up literal value
+                            for (var j = 0; j < vallist.length; j++) {
+                                var value = vallist[j];
+                                if ($.isPlainObject(value)) {
+                                    // is this an object, which will therefore have sub fields?
+                                    var elset = elsetlist[j];
+                                    var subfields = Object.keys(value);
+                                    for (var k = 0; k < subfields.length; k++) {
+                                        var sf = subfields[k];
+                                        // elset[sf].val(value[sf]);
+                                        octopus.forms.setValue({jqel: elset[sf], val: value[sf]});
+                                    }
+                                } else {
+                                    // is this is literal, to be rendered into the form
+                                    var vel = elsetlist[j];
+                                    // vel.val(value);
+                                    octopus.forms.setValue({jqel: vel, val: value});
                                 }
                             }
                         }

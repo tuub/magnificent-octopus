@@ -2,20 +2,28 @@
 # to the desired config files (in the order you want them loaded)
 CONFIG_FILES = [
     # octopus.lib config files
+    "magnificent-octopus/octopus/config/cli.py",
+    "magnificent-octopus/octopus/config/dates.py",
     "magnificent-octopus/octopus/config/googlemap.py",
     "magnificent-octopus/octopus/config/http.py",
     "magnificent-octopus/octopus/config/mail.py",
     "magnificent-octopus/octopus/config/webapp.py",
 
     # octopus.module config files
+    "magnificent-octopus/octopus/modules/account/settings.py",
+    "magnificent-octopus/octopus/modules/cache/settings.py",
     "magnificent-octopus/octopus/modules/clientjs/settings.py",
+    "magnificent-octopus/octopus/modules/coreacuk/settings.py",
     "magnificent-octopus/octopus/modules/crud/settings.py",
     "magnificent-octopus/octopus/modules/doaj/settings.py",
     "magnificent-octopus/octopus/modules/epmc/settings.py",
     "magnificent-octopus/octopus/modules/es/settings.py",
+    "magnificent-octopus/octopus/modules/jper/settings.py",
     "magnificent-octopus/octopus/modules/oag/settings.py",
     "magnificent-octopus/octopus/modules/romeo/settings.py",
     "magnificent-octopus/octopus/modules/sherpafact/settings.py",
+    "magnificent-octopus/octopus/modules/store/settings.py",
+    "magnificent-octopus/octopus/modules/swordv2/settings.py",
 
     # local service configuration
     "config/service.py",
@@ -31,6 +39,7 @@ TEMPLATE_PATHS = [
     "magnificent-octopus/octopus/templates",
 
     # octopus modules templates
+    "magnificent-octopus/octopus/modules/account/templates",
     "magnificent-octopus/octopus/modules/clientjs/templates",
     "magnificent-octopus/octopus/modules/oag/templates"
 ]
@@ -44,6 +53,7 @@ STATIC_PATHS = [
     "magnificent-octopus/octopus/static",
 
     # octopus modules static directories
+    "magnificent-octopus/octopus/modules/account/static",
     "magnificent-octopus/octopus/modules/clientjs/static",
     "magnificent-octopus/octopus/modules/crud/static",
     "magnificent-octopus/octopus/modules/es/static",
@@ -52,8 +62,16 @@ STATIC_PATHS = [
     "magnificent-octopus/octopus/modules/sherpafact/static"
 ]
 
-# module import paths for the startup modules that need to run at application init type (in the order you want them run)
+# module import paths for the app initialisation modules that need to run at flask app creation
+# (e.g. to do things like add login management support)
+SETUP_MODULES = [
+    "octopus.modules.account.setup_app",     # NOTE that you will also need to set ACCOUNT_ENABLE=True for this to run
+    "service.setup_app"
+]
+
+# module import paths for the startup modules that need to run at application startup (in the order you want them run)
+# (e.g. to do things like create/pre-populate the database)
 INITIALISE_MODULES = [
-    # octopus modules initialisation
-    "octopus.modules.es.initialise"
+    "octopus.modules.es.initialise",
+    "service.initialise"
 ]

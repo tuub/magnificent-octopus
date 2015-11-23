@@ -1,24 +1,40 @@
 import csv, codecs, re, os
 import cStringIO
+from octopus.core import app
+from StringIO import StringIO
 
 class CsvReadException(Exception):
+    pass
+
+class CsvStructureException(Exception):
     pass
 
 class ClCsv():
 
     def __init__(self, file_path=None, writer=None,
                  output_encoding="utf-8", input_encoding="utf-8",
-                 try_encodings_hard=True, fallback_input_encodings=None):
+                 try_encodings_hard=True, fallback_input_encodings=None,
+                 from_row=0, from_col=0, ignore_blank_rows=False,
+                 input_dialect=csv.excel):
         """
         Class to wrap the Python CSV library. Allows reading and writing by column.
         :param file_path: A file object or path to a file. Will create one at specified path if it does not exist.
         """
+        self.file_path = None
         self.output_encoding = output_encoding
         self.input_encoding = input_encoding
 
+        # useful to know about this for any future work on encodings: https://docs.python.org/2.4/lib/standard-encodings.html
         if fallback_input_encodings is None and try_encodings_hard:
-            fallback_input_encodings = ["cp1252", "cp1251", "iso-8859-1", "iso-8859-2", "windows-1252", "windows-1251"]
+            fallback_input_encodings = ["cp1252", "cp1251", "iso-8859-1", "iso-8859-2", "windows-1252", "windows-1251", "mac_roman"]
+        else:
+            fallback_input_encodings = []
         self.fallback_input_encodings = fallback_input_encodings
+
+        self.from_row = from_row
+        self.from_col = from_col
+        self.ignore_blank_rows = ignore_blank_rows
+        self.input_dialect = input_dialect
 
         # Store the csv contents in a list of tuples, [ (column_header, [contents]) ]
         self.data = []
@@ -26,6 +42,7 @@ class ClCsv():
         # Get an open file object from the given file_path or file object
         if file_path is not None:
             if type(file_path) == file:
+                self.file_path = file_path.name
                 # NOTE: if you have passed in a file object, it MUST work - as in, it must be set to
                 # read the right encoding, and everything.  We will not try to parse it again if it
                 # fails the first time.  If it is closed, you will also need to be sure to set the input_encoding.
@@ -37,6 +54,7 @@ class ClCsv():
                 # explicitly read this file in
                 self._read_file(self.file_object)
             else:
+                self.file_path = file_path
                 if os.path.exists(file_path) and os.path.isfile(file_path):
                     self._read_from_path(file_path)
                 else:
@@ -55,8 +73,12 @@ class ClCsv():
                 self.file_object = file_object
                 self.input_encoding = code
                 return
-            except:
-                pass
+            except CsvReadException as e:
+                app.logger.info(e.message)
+            except CsvStructureException as e:
+                app.logger.info(e.message)
+            except Exception as e:
+                app.logger.info(e.message)
         # if we get to here, we were unable to read the file using any method
         raise CsvReadException("Unable to find a codec which can parse the file correctly")
 
@@ -69,15 +91,18 @@ class ClCsv():
             if file_object.closed:
                 codecs.open(file_object.name, 'r+b', encoding=self.input_encoding)
 
-            reader = UnicodeReader(file_object, output_encoding=self.output_encoding)
+            reader = UnicodeReader(file_object, output_encoding=self.output_encoding, dialect=self.input_dialect)
             rows = []
             for row in reader:
                 rows.append(row)
+        except:
+            raise CsvReadException("Unable to read file with {x} - likely an encoding problem (non fatal)".format(x=self.input_encoding))
 
+        try:
             self._populate_data(rows)
             return rows
         except:
-            raise CsvReadException("Unable to read file (possibly a codec problem, or a data structure problem)")
+            raise CsvStructureException("Unable to read file into meaningful datastructure using encoding {x} (non fatal)".format(x=self.input_encoding))
 
     def headers(self):
         """
@@ -126,6 +151,22 @@ class ClCsv():
                 c.append(v)
             else:
                 c.append("")
+
+    def triples(self):
+        """
+        Iterate over every cell in the body of the sheet, taking the header and the
+        first value in the row as the indices, and the value in the intersecting cell
+        :return: (column header, row title, value)
+        """
+        _, c = self.get_column(0)
+        headers = self.headers()
+
+        vert = 0
+        for y in c:
+            for x in headers[1:]:
+                _, col = self.get_column(x)
+                yield x, y, col[vert]
+            vert += 1
 
     def get_column(self, col_identifier):
         """
@@ -227,6 +268,14 @@ class ClCsv():
         if close:
             self.file_object.close()
 
+    def filename(self):
+        if self.file_path is not None:
+            return os.path.basename(self.file_path)
+        return None
+
+    def _is_empty(self, row):
+        return sum([1 if c is not None and c != "" else 0 for c in row]) == 0
+
     def _populate_data(self, csv_rows):
         # Reset the stored data
         self.data = []
@@ -234,11 +283,15 @@ class ClCsv():
             return
 
         # Add new data
-        for i in range(0, len(csv_rows[0])):
+        for i in range(self.from_col, len(csv_rows[0])):        # for each column
             col_data = []
-            for row in csv_rows[1:]:
+            for row in csv_rows[self.from_row + 1:]:            # for each row
+                if self.ignore_blank_rows:                      # conditionally ignore blank rows
+                    row_segment = row[self.from_col:]
+                    if self._is_empty(row_segment):
+                        continue
                 col_data.append(row[i])
-            self.data.append((csv_rows[0][i], col_data))
+            self.data.append((csv_rows[self.from_row][i], col_data))    # register along with the header
 
 class BadCharReplacer:
     """
@@ -312,7 +365,10 @@ class UTF8Recoder:
 
     def next(self):
         val = self.reader.next()
-        return val.encode(self.encoding)
+        raw = val.encode("utf-8")
+        if raw.startswith(codecs.BOM_UTF8):
+            raw = raw.replace(codecs.BOM_UTF8, '', 1)
+        return raw
 
 class UnicodeReader:
     """
@@ -366,3 +422,232 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+######################################################################
+
+class SheetValidationException(Exception):
+    def __init__(self, *args, **kwargs):
+        super(SheetValidationException, self).__init__(*args)
+        self.missing_header = kwargs["missing_header"]
+
+class SheetWrapper(object):
+    # map from values that will appear in the headers for real (i.e. human readable) to values
+    # that should be used to refer to that column internally
+    HEADERS = {}
+
+    # Function(s) which are applied to normalise header keys (in order), to be used in the absence of the map
+    # in the HEADERS dictionary
+    HEADER_NORMALISER = []
+
+    # list of headers that must be present such that validation of the sheet will succeed - use
+    # the internal reference name, not the human name
+    REQUIRED = []
+
+    # order of headers as they should be saved - use the internal reference name, not the human
+    # readable name
+    OUTPUT_ORDER = []
+
+    # values to set in cells where no value is provided when adding a row/object - use the internal
+    # reference name as the key, and the default value as the value
+    DEFAULT_VALUES = {}
+
+    # should any empty string be represented as a None?  Is overridden by anything in the
+    # DEFAULT_VALUES mapping
+    EMPTY_STRING_AS_NONE = False
+
+    # should values be trimmed before being returned.  This will be applied before the empty string
+    # check, so can be used to return all whitespace-only strings as None too
+    TRIM = True
+
+    # coerce functions to apply to a value when it is read.  Use the internal reference name as the key,
+    # and a function reference as the value
+    COERCE = {}
+
+    # coerce function(s) to apply to a value when it is read if it does not appear in the above COERCE list
+    # executed in order
+    DEFAULT_COERCE = []
+
+    # values that should be treated as the empty string.  Use the internal reference name as the key
+    # and a list of values in an array that should be ignored
+    IGNORE_VALUES = {}
+
+    def __init__(self, path=None, writer=None, spec=None):
+        if path is not None:
+            self._sheet = ClCsv(path, ignore_blank_rows=True)
+        elif writer is not None:
+            self._sheet = ClCsv(writer=writer, ignore_blank_rows=True)
+            self._set_headers(spec)
+
+    def _set_headers(self, spec=None):
+        headers = []
+
+        # only write headers which are in the object spec
+        if spec is not None:
+            oo = [x for x in self.OUTPUT_ORDER if x in spec]
+        else:
+            oo = self.OUTPUT_ORDER
+
+        # write the headers in the correct order, ensuring they exist in the
+        # Master spreadsheet header definitions
+        for o in oo:
+            found = False
+            for k, v in self.HEADERS.iteritems():
+                if v == o:
+                    headers.append(k)
+                    found = True
+                    break
+            if not found:
+                headers.append(o)
+
+        # finally write the filtered, sanitised headers
+        self._sheet.set_headers(headers)
+
+    def _header_key_map(self, key):
+        for k, v in self.HEADERS.iteritems():
+            if key.strip().lower() == k.lower():
+                return v
+        return None
+
+    def _header_value_map(self, val):
+        for k, v in self.HEADERS.iteritems():
+            if v.strip().lower() == val.lower():
+                return k
+
+    def _value(self, field, value):
+        # first thing is, do we trim the value
+        if self.TRIM:
+            try:
+                value = value.strip()
+            except AttributeError:
+                # this is a type that can't be stripped
+                pass
+
+        # we have the normalised value, so determine if it is to be ignored now
+        if field in self.IGNORE_VALUES:
+            if value in self.IGNORE_VALUES[field]:
+                # if it's on the ignore list, re-write it to the empty string
+                value = ""
+
+        # now check to see if this is the empty string or None, and therefore if we need to return a default value
+        if value is None or value == "":
+            # the value in the cell is empty, so decide what to do
+            #
+            # if there is a default value, return that.
+            if field in self.DEFAULT_VALUES:
+                return self.DEFAULT_VALUES.get(field, "")
+
+            # otherwise, if we return empty strings as none, return none
+            if self.EMPTY_STRING_AS_NONE:
+                return None
+
+            # finally, otherwise, return the empty string
+            return value
+
+        # now we have a value which has content that we don't want to ignore, so see if we need to
+        # coerce it at all.  If there's no specific coerce, check the default coerce
+        if field in self.COERCE:
+            fn = self.COERCE[field]
+            value = fn(value)
+        elif len(self.DEFAULT_COERCE) > 0:
+            for fn in self.DEFAULT_COERCE:
+                value = fn(value)
+
+        # finally, return the value in whatever state it is now in
+        return value
+
+    def validate(self):
+        ref = [self.HEADERS.get(h) for h in self._sheet.headers() if h in self.HEADERS]
+        for r in self.REQUIRED:
+            if r not in ref:
+                header = self._header_value_map(r)
+                raise SheetValidationException("One or more headings are missing from the sheet", missing_header=header)
+        return True
+
+    def objects(self, use_headers=True, beyond_headers=False):
+        for o in self._sheet.objects():
+            no = {}
+            for key, val in o.iteritems():
+                hk = None
+                if use_headers:
+                    hk = self._header_key_map(key)
+                if hk is None and beyond_headers:
+                    hk = key
+                    if len(self.HEADER_NORMALISER) > 0:
+                        for fn in self.HEADER_NORMALISER:
+                            hk = fn(hk)
+                if hk is not None:
+                    no[hk] = self._value(hk, val)
+            yield no
+
+    def add_object(self, obj):
+        no = {}
+        for k, v in obj.iteritems():
+            for k1, v1 in self.HEADERS.iteritems():
+                if k == v1:
+                    no[k1] = self._value(k, v)
+                    break
+        self._sheet.add_object(no)
+
+    def dataobjs(self, template, skip_on_error=False):
+        for o in self.objects():
+            do = template()
+            try:
+                do.populate(o)
+                yield do
+            except Exception as e:
+                if skip_on_error:
+                    continue
+                raise e
+
+    def add_dataobj(self, dobj, coerce=None):
+        obj = {}
+        for field in self.HEADERS.values():
+            # get the attribute for the header if it exists
+            att = getattr(dobj, field, None)
+            if att is None:
+                continue            # Do it this way round to avoid further indentation
+
+            # if the attribute exists, we now have its value
+            coerced = False
+            if coerce is not None:
+                # we may have been passed a coerce function for this field
+                fn = coerce.get(field)
+                if fn is not None:
+                    att = fn(att)
+                    coerced = True
+
+            # as a special favour, if the value is a list and we haven't been given
+            # a coerce function, then join it with commas
+            if isinstance(att, list) and not coerced:
+                att = ", ".join(att)
+
+            # now record the value in the object
+            obj[field] = att
+
+        # finally, add the object to the sheet
+        self.add_object(obj)
+
+    def filename(self):
+        return self._sheet.filename()
+
+    def save(self):
+        self._sheet.save(close=False)
+
+def get_csv_string(csv_row):
+    '''
+    csv.writer only writes to files - it'd be a lot easier if it
+    could give us the string it generates, but it can't. This
+    function uses StringIO to capture every CSV row that csv.writer
+    produces and returns it.
+
+    :param csv_row: A list of strings, each representing a CSV cell.
+        This is the format required by csv.writer .
+    '''
+    csvstream = StringIO()
+    csvwriter = csv.writer(csvstream, quoting=csv.QUOTE_ALL)
+    # normalise the row - None -> "", and unicode > 128 to ascii
+    csvwriter.writerow([unicode(c).encode("utf8", "replace") if c is not None else "" for c in csv_row])
+    csvstring = csvstream.getvalue()
+    csvstream.close()
+    return csvstring

@@ -5,14 +5,18 @@ setup(
     version = '1.0.0',
     packages = find_packages(),
     install_requires = [
-        "requests",
+        "werkzeug==0.8.3",
         "Flask==0.9",
-        "esprit",
         "Flask-Login==0.1.3",
+        "requests",
+        "esprit",
         "simplejson",
-        "lxml",
+        "lxml==3.4.4",
         "Flask-WTF==0.8.3",
-        "nose"
+        "nose",
+        "Flask-Mail==0.9.1",
+        "python-dateutil",
+        "unidecode"
     ],
     url = 'http://cottagelabs.com/',
     author = 'Cottage Labs',
