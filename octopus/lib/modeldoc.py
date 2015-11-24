@@ -41,7 +41,11 @@ DO_TYPE_TO_FORMAT = {
 def format(klazz, example, fields):
     title = "# " + klazz.__name__
 
+    intro = "The JSON structure of the model is as follows:"
+
     struct = "```json\n" + json.dumps(example, indent=4, sort_keys=True) + "\n```"
+
+    table_intro = "Each of the fields is defined as laid out in the table below:"
 
     table = "| Field | Description | Datatype | Format | Allowed Values |\n"
     table += "| ----- | ----------- | -------- | ------ | -------------- |\n"
@@ -53,7 +57,7 @@ def format(klazz, example, fields):
         desc, datatype, format, values = fields.get(k)
         table += "| {field} | {desc} | {datatype} | {format} | {values} |\n".format(field=k, desc=desc, datatype=datatype, format=format, values=values)
 
-    return title + "\n\n" + struct + "\n\n" + table
+    return title + "\n\n" + intro + "\n\n" + struct + "\n\n" + table_intro + "\n\n" + table
 
 def document(klazz, field_descriptions):
     inst = klazz()
