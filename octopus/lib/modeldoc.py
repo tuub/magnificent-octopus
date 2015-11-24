@@ -55,7 +55,7 @@ def format(klazz, example, fields):
 
     return title + "\n\n" + struct + "\n\n" + table
 
-def document(klazz):
+def document(klazz, field_descriptions):
     inst = klazz()
     base_struct = inst.get_struct()
 
@@ -67,7 +67,7 @@ def document(klazz):
         # first do all the fields at this level
         for simple_field, instructions in struct.get('fields', {}).iteritems():
             example[simple_field] = type_map(instructions.get("coerce"))
-            fields[path + simple_field] = ("", datatype(instructions.get("coerce")), form(instructions.get("coerce")), values_or_range(instructions.get("allowed_values"), instructions.get("allowed_range")))
+            fields[path + simple_field] = (field_descriptions.get(path + simple_field, ""), datatype(instructions.get("coerce")), form(instructions.get("coerce")), values_or_range(instructions.get("allowed_values"), instructions.get("allowed_range")))
 
         # now do all the objects at this level
         for obj in struct.get('objects', []):
@@ -79,7 +79,7 @@ def document(klazz):
         for l, instructions in struct.get('lists', {}).iteritems():
             if instructions['contains'] == 'field':
                 example[l] = [type_map(instructions.get("coerce"))]
-                fields[path + l] = ("", datatype(instructions.get("coerce")), form(instructions.get("coerce")), values_or_range(instructions.get("allowed_values"), instructions.get("allowed_range")))
+                fields[path + l] = (field_descriptions.get(path + l, ""), datatype(instructions.get("coerce")), form(instructions.get("coerce")), values_or_range(instructions.get("allowed_values"), instructions.get("allowed_range")))
 
             elif instructions['contains'] == 'object':
                 newpath = l + "." if not path else path + l + "."
@@ -124,10 +124,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-k", "--klazz", help="class to document")
     parser.add_argument("-o", "--out", help="output file")
+    parser.add_argument("-f", "--fields", help="field descriptions table")
     args = parser.parse_args()
 
+    descriptions = {}
+    with codecs.open(args.fields) as f:
+        fds = f.read()
+    lines = fds.split("\n")
+    for line in lines:
+        sep = line.find(":")
+        descriptions[line[:sep]] = line[sep + 1:].strip()
+
     k = plugin.load_class_raw(args.klazz)
-    example, fields = document(k)
+    example, fields = document(k, descriptions)
     doc = format(k, example, fields)
 
     with codecs.open(args.out, "wb") as f:
