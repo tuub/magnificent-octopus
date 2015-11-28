@@ -24,6 +24,9 @@ class JPER(object):
         self.api_key = api_key if api_key is not None else app.config.get("JPER_API_KEY")
         self.base_url = base_url if base_url is not None else app.config.get("JPER_BASE_URL")
 
+        if self.base_url.endswith("/"):
+            self.base_url = self.base_url[:-1]
+
     def _url(self, endpoint=None, id=None, auth=True, params=None, url=None):
         if url is None:
             url = self.base_url
@@ -40,13 +43,19 @@ class JPER(object):
         if auth:
             if params is None:
                 params = {}
-            params["api_key"] = self.api_key
+            if self.api_key is not None and self.api_key != "":
+                params["api_key"] = self.api_key
 
         args = []
         for k, v in params.iteritems():
             args.append(k + "=" + http.quote(unicode(v)))
-        qs = "?" + "&".join(args)
-        url += qs
+        if len(args) > 0:
+            if "?" not in url:
+                url += "?"
+            else:
+                url += "&"
+            qs = "&".join(args)
+            url += qs
 
         return url
 
