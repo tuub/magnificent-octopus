@@ -142,7 +142,7 @@ class JPER(object):
             return None
 
         if resp.status_code != 200:
-            raise JPERException("Received unexpected status code: {x}".format(x=resp.status_code))
+            raise JPERException("Received unexpected status code from {y}: {x}".format(x=resp.status_code, y=url))
 
         j = resp.json()
         if "provider" in j:
@@ -165,7 +165,7 @@ class JPER(object):
             raise JPERAuthException("Could not authenticate with JPER with your API key")
 
         if resp.status_code != 200:
-            raise JPERException("Received unexpected status code: {x}".format(x=resp.status_code))
+            raise JPERException("Received unexpected status code from {y}: {x}".format(x=resp.status_code, y=url))
 
         # return the response object, in case the caller wants access to headers, etc.
         return resp.raw, resp.headers
@@ -206,7 +206,7 @@ class JPER(object):
             raise JPERException(resp.json().get("error"))
 
         if resp.status_code != 200:
-            raise JPERException("Received unexpected status code: {x}".format(x=resp.status_code))
+            raise JPERException("Received unexpected status code from {y}: {x} ".format(x=resp.status_code, y=url))
 
         # create the notification list object
         j = resp.json()
