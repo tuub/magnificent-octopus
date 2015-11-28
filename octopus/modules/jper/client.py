@@ -159,7 +159,7 @@ class JPER(object):
         else:
             return models.OutgoingNotification(j)
 
-    def get_content(self, url):
+    def get_content(self, url, chunk_size=8096):
         # just sort out the api_key
         url = self._url(url=url)
 
@@ -177,7 +177,7 @@ class JPER(object):
             raise JPERException("Received unexpected status code from {y}: {x}".format(x=resp.status_code, y=url))
 
         # return the response object, in case the caller wants access to headers, etc.
-        return resp.raw, resp.headers
+        return resp.iter_content(chunk_size=chunk_size), resp.headers
 
     def list_notifications(self, since, page=None, page_size=None, repository_id=None):
         # check that the since date is valid, and get it into the right format

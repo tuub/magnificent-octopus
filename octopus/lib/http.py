@@ -221,9 +221,9 @@ class MockResponse(object):
     def headers(self):
         return self._headers if self._headers is not None else {}
 
-    def iter_content(self, num_bytes):
+    def iter_content(self, chunk_size=1024):
         while True:
-            b = self._stream.read(num_bytes)
+            b = self._stream.read(chunk_size)
             if b == "":
                 # we have reached the end of the file
                 break
