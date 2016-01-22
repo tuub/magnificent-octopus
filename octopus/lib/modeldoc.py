@@ -45,7 +45,7 @@ def format(klazz, example, fields):
 
     struct = "```json\n" + json.dumps(example, indent=4, sort_keys=True) + "\n```"
 
-    table_intro = "Each of the fields is defined as laid out in the table below:"
+    table_intro = "Each of the fields is defined as laid out in the table below.  All fields are optional unless otherwise specified:"
 
     table = "| Field | Description | Datatype | Format | Allowed Values |\n"
     table += "| ----- | ----------- | -------- | ------ | -------------- |\n"
