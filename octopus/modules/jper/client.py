@@ -18,7 +18,8 @@ class ValidationException(JPERException):
 class JPER(object):
 
     # FilesAndJATS = "http://router.jisc.ac.uk/packages/FilesAndJATS"
-    FilesAndJATS = "https://pubrouter.jisc.ac.uk/FilesAndJATS"
+    #FilesAndJATS = "https://pubrouter.jisc.ac.uk/FilesAndJATS"
+    FilesAndJATS = "https://datahub.deepgreen.org/FilesAndJATS"
 
     def __init__(self, api_key=None, base_url=None):
         self.api_key = api_key if api_key is not None else app.config.get("JPER_API_KEY")
@@ -70,6 +71,9 @@ class JPER(object):
         # get the url that we are going to send to
         url = self._url("validate")
 
+        # 2016-06-20 TD : switch SSL verification off
+        verify = False
+        
         resp = None
         if file_handle is None:
             # if there is no file handle supplied, send the metadata-only notification
@@ -80,7 +84,7 @@ class JPER(object):
                 ("metadata", ("metadata.json", data, "application/json")),
                 ("content", ("content.zip", file_handle, "application/zip"))
             ]
-            resp = http.post(url, files=files)
+            resp = http.post(url, files=files, verify=verify)
 
         if resp is None:
             raise JPERConnectionException("Unable to communicate with the JPER API")
@@ -104,17 +108,20 @@ class JPER(object):
         # get the url that we are going to send to
         url = self._url("notification")
 
+        # 2016-06-20 TD : switch SSL verification off
+        verify = False
+        
         resp = None
         if file_handle is None:
             # if there is no file handle supplied, send the metadata-only notification
-            resp = http.post(url, data=data, headers={"Content-Type" : "application/json"})
+            resp = http.post(url, data=data, headers={"Content-Type" : "application/json"}, verify=verify)
         else:
             # otherwise send both parts as a multipart message
             files = [
                 ("metadata", ("metadata.json", data, "application/json")),
                 ("content", ("content.zip", file_handle, "application/zip"))
             ]
-            resp = http.post(url, files=files)
+            resp = http.post(url, files=files, verify=verify)
 
         if resp is None:
             raise JPERConnectionException("Unable to communicate with the JPER API")
@@ -163,8 +170,11 @@ class JPER(object):
         # just sort out the api_key
         url = self._url(url=url)
 
+        # 2016-06-20 TD : switch SSL verification off
+        verify = False
+        
         # get the response object
-        resp, content, downloaded_bytes = http.get_stream(url, read_stream=False)
+        resp, content, downloaded_bytes = http.get_stream(url, read_stream=False, verify=verify)
 
         # check for errors or problems with the response
         if resp is None:
