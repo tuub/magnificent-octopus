@@ -148,8 +148,11 @@ class JPER(object):
         else:
             raise JPERException("You must supply either the notification_id or the location")
 
+        # 2016-06-20 TD : switch SSL verification off
+        verify = False
+
         # get the response object
-        resp = http.get(url)
+        resp = http.get(url, verify=verify)
 
         if resp is None:
             raise JPERConnectionException("Unable to communicate with the JPER API")
@@ -211,8 +214,11 @@ class JPER(object):
         # get the url, which may contain the repository id if it is not None
         url = self._url("routed", id=repository_id, params=params)
 
+        # 2016-06-20 TD : switch SSL verification off
+        verify = False
+        
         # get the response object
-        resp = http.get(url)
+        resp = http.get(url, verify=verify)
 
         # check for errors or problems with the response
         if resp is None:
