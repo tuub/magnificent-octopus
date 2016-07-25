@@ -77,7 +77,7 @@ class JPER(object):
         resp = None
         if file_handle is None:
             # if there is no file handle supplied, send the metadata-only notification
-            resp = http.post(url, data=data, headers={"Content-Type" : "application/json"})
+            resp = http.post(url, data=data, headers={"Content-Type" : "application/json"}, verify=verify)
         else:
             # otherwise send both parts as a multipart message
             files = [
