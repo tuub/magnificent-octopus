@@ -11,7 +11,7 @@ from sss.core import Auth, SwordError, AuthException, DepositRequest, DeleteRequ
 
 # create the global configuration and import the implementation classes
 from sss.config import Configuration
-config = Configuration(config_obj=app.config.get("SWORDV2_SERVER_CONFIG"))
+config = Configuration(config_file=app.config.get("SWORDV2_SERVER_CONFIG"))
 Authenticator = config.get_authenticator_implementation()
 SwordServer = config.get_server_implementation()
 
