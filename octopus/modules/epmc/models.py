@@ -268,6 +268,20 @@ class JATS(object):
     @property
     def publication_date(self):
         # first look for an explicit publication date
+        # 2016-10-17 TD : additionally, use @pub-type attribute:
+        #                 look first for epub, second for epub-ppub, third ppub
+        pds = self.xml.xpath("//article-meta/pub-date[@pub-type='epub']")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+        pds = self.xml.xpath("//article-meta/pub-date[@pub-type='epub-ppub']")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+        pds = self.xml.xpath("//article-meta/pub-date[@pub-type='ppub']")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+        # 2016-10-17 TD
+        # note: @date-type attrib seems to be marked as deprecated... but, so what? 
+
         pds = self.xml.xpath("//article-meta/pub-date[@date-type='pub']")
         if len(pds) > 0:
             return self._make_date(pds[0])
