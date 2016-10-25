@@ -11,9 +11,12 @@ from sss.core import Auth, SwordError, AuthException, DepositRequest, DeleteRequ
 
 # create the global configuration and import the implementation classes
 from sss.config import Configuration
-##config = Configuration(config_file=app.config.get("SWORDV2_SERVER_CONFIG"))
-## 2016-08-25 TD : take the default (i.e. built-in) by implicitly setting config_file=None
-config = Configuration() # default configuration
+# ##config = Configuration(config_file=app.config.get("SWORDV2_SERVER_CONFIG"))
+# ## 2016-08-25 TD : take the default (i.e. built-in) by implicitly setting config_file=None
+# config = Configuration() # default configuration
+# 2016-10-25 TD : make the original Configuration api work again.  The trick here was the
+#                 observation that in 'local.cfg' the config varible /is/ already a dict!
+config = Configuration(config_obj=app.config.get("SWORDV2_SERVER_CONFIG"))
 Authenticator = config.get_authenticator_implementation()
 SwordServer = config.get_server_implementation()
 
