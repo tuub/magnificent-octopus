@@ -376,6 +376,16 @@ class JATS(object):
                         norm = " ".join(contents.split())
                         affs.append(norm)
 
+            # 2016-11-07 TD : additionally, fetch the "global" affiliation(s) -- start
+            xp = "//aff[not(@id)]"
+            aff_elements = self.xml.xpath(xp)
+            for ae in aff_elements:
+                contents = ae.xpath("string()")
+                norm = " ".join(contents.split())
+                affs.append(norm)
+            # 2016-11-07 TD : "global" affiliation(s) -- end
+
+
             if len(affs) > 0:
                 con["affiliations"] = affs
 
