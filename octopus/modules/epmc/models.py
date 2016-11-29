@@ -403,7 +403,7 @@ class JATS(object):
 
 #
 #
-# 2016-11-28 TD : extension to RSC metadata scheme; according to examples of
+# 2016-11-28 TD : A (new!) class for RSC metadata scheme; according to examples of
 #                 <!DOCTYPE article PUBLIC "-//RSC//DTD RSC Primary Article DTD 3.7//EN" 
 #                  "http://www.rsc.org/dtds/rscart37.dtd" [...]>
 #
