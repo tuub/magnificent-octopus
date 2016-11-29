@@ -195,6 +195,7 @@ class EPMCMetadata(dataobj.DataObj):
     def title(self):
         return self._get_single("title", self._utf8_unicode(), allow_coerce_failure=False)
 
+
 class JATS(object):
     def __init__(self, raw=None, xml=None):
         self.raw = None
@@ -385,6 +386,236 @@ class JATS(object):
                 affs.append(norm)
             # 2016-11-07 TD : "global" affiliation(s) -- end
 
+            if len(affs) > 0:
+                con["affiliations"] = affs
+
+            if len(con.keys()) > 0:
+                obs.append(con)
+
+        return obs
+
+    def tostring(self):
+        if self.raw is not None:
+            return self.raw
+        elif self.xml is not None:
+            return etree.tostring(self.xml)
+
+
+#
+#
+# 2016-11-28 TD : extension to RSC metadata scheme; according to examples of
+#                 <!DOCTYPE article PUBLIC "-//RSC//DTD RSC Primary Article DTD 3.7//EN" 
+#                  "http://www.rsc.org/dtds/rscart37.dtd" [...]>
+#
+class RSCMetadataXML(object):
+    def __init__(self, raw=None, xml=None):
+        self.months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                       "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "UNA"]
+        self.raw = None
+        self.xml = None
+        if raw is not None:
+            self.raw = raw
+            try:
+                self.xml = etree.fromstring(self.raw)
+            except:
+                raise JATSException("Unable to parse XML", self.raw)
+        elif xml is not None:
+            self.xml = xml
+
+    @property
+    def title(self):
+        return xutil.xp_first_text(self.xml, "//art-front/titlegrp/title")
+
+    @property
+    def is_aam(self):
+        # 2016-11-29 TD : FIXME: check if this correctly identifies an 
+        #                 "author accepted manuscript"
+        manuscripts = self.xml.xpath("//art-admin/date[@role='accepted']")
+        return len(manuscripts) <= 0
+
+    def get_licence_details(self):
+        # 2016-11-28 TD : apparently, there are no license info provided by RSC...
+        return None, None, None
+        # # get the licence type
+        # l = self.xml.xpath("//license")
+        # if len(l) > 0:
+        #     l = l[0]
+        # else:
+        #     return None, None, None
+        # type = l.get("license-type")
+        # url = l.get("{http://www.w3.org/1999/xlink}href")
+        #
+        # get the paragraph(s) describing the licence
+        # para = self.xml.xpath("//license/license-p")
+        # out = ""
+        # for p in para:
+        #     out += etree.tostring(p)
+        #
+        # return type, url, out
+
+    @property
+    def copyright_statement(self):
+        return xutil.xp_first_text(self.xml, "//journalref/cpyrt")
+
+    @property
+    def categories(self):
+        return xutil.xp_texts(self.xml, "//art-front/subject")
+
+    @property
+    def authors(self):
+        aels = self.xml.xpath("//art-front/authgrp/author/person")
+        return self._make_contribs(aels)
+
+    @property
+    def contribs(self):
+        cs = self.xml.xpath("//art-front/authgrp/author/person")
+        return self._make_contribs(cs)
+
+    @property
+    def emails(self):
+        return xutil.xp_texts(self.xml, "//email")
+
+    @property
+    def keywords(self):
+        return xutil.xp_texts(self.xml, "//art-front/keyword")
+
+    @property
+    def publisher(self):
+        return xutil.xp_first_text(self.xml, "//publisher/orgname/nameelt")
+
+    @property
+    def publication_date(self):
+        # first look for an explicit publication date
+        # 2016-11-28 TD : additionally, use @type attribute:
+        #                 look first for web, second for print (and third, subsyear ?!)
+        pds = self.xml.xpath("//published[@type='web']/pubfront/date")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+        pds = self.xml.xpath("//published[@type='print']/pubfront/date")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+        # 2016-11-28 TD
+        # note: @type='subsyear' attrib seems to be obscure... but, so what? 
+
+        pds = self.xml.xpath("//published[@type='subsyear']/pubfront/date")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+
+        # if not, look for any pub-date and use the first of it
+        pds = self.xml.xpath("//published/pubfront/date")
+        if len(pds) > 0:
+            return self._make_date(pds[0])
+
+        # otherwise, insufficient information
+        return None
+
+    @property
+    def date_accepted(self):
+        das = self.xml.xpath("//art-admin/date[@role='accepted']")
+        if len(das) > 0:
+            return self._make_date(das[0])
+
+    @property
+    def date_revised(self):
+        drs = self.xml.xpath("//art-admin/date[@role='revised']")
+        if len(drs) > 0:
+            return self._make_date(drs[0])
+
+    @property
+    def date_submitted(self):
+        rcs = self.xml.xpath("//art-admin/received/date")
+        if len(rcs) > 0:
+            return self._make_date(rcs[0])
+
+    @property
+    def issn(self):
+        # 2016-11-28 TD : for all @type values (web, print, and subsyear) there seems
+        #                 to be always both the online EISSN and the print ISSN available
+        return xutil.xp_texts(self.xml, "//published[@type='web']/journalref/issn")
+
+    @property
+    def pmcid(self):
+        # 2016-11-28 TD : RSC has no pmcid journals, apparently...
+        return None
+        # id = xutil.xp_first_text(self.xml, "//article-meta/article-id[@pub-id-type='pmcid']")
+        # if id is not None and not id.startswith("PMC"):
+        #     id = "PMC" + id
+        # return id
+
+    @property
+    def doi(self):
+        return xutil.xp_first_text(self.xml, "//art-admin/doi")
+
+    def _make_date(self, element):
+        ob = xutil.objectify(element)
+        year = ob.get("year")
+        month = ob.get("month", "01")
+        # 2016-11-28 TD : RSC seems to store the full month name and, thus, a simple
+        #                 conversion to the month number must be done.  Note that
+        #                 'Unassigned' is also mapped to '01' here.
+        if month.upper()[:3] in self.months:
+            month = str( 1 + self.months.index(month.upper()[:3]) % 12 )
+        day = ob.get("day", "01")
+        if len(month) < 2:
+            month = "0" + month
+        if len(day) < 2:
+            day = "0" + day
+        if year is None or len(year) != 4:
+            return None
+        return year + "-" + month + "-" + day
+
+    def _make_contribs(self, elements):
+        obs = []
+
+        for c in elements:
+            con = {}
+
+            # first see if there is a name we can pull out
+            name = c.find("persname")
+            if name is not None:
+                sn = name.find("surname")
+                if sn is not None:
+                    con["surname"] = sn.text
+
+                fn = name.find("fname")
+                if fn is not None:
+                    con["fname"] = fn.text
+
+            # 2016-11-28 TD : note that, with RSC, the email is *always* in the 'aff' tag! 
+            # # see if there's an email address
+            # email = c.find("email")
+            # if email is not None:
+            #     con["email"] = email.text
+
+            # now do the affiliations (by 'aff' attribute of parent tag 'author')
+            affs = []
+
+            # aff = c.find("aff")
+            # if aff is not None:
+            #     contents = aff.xpath("string()")
+            #     norm = " ".join(contents.split())
+            #     affs.append(norm)
+
+            arefs = c.getparent().get("aff")
+            if arefs is not None:
+                for affid in arefs.split():
+                    xp = "//aff[@id='" + affid + "']"
+                    aff_elements = self.xml.xpath(xp)
+                    for ae in aff_elements:
+                        org = ae.xpath("org//text()")
+                        adr = ae.xpath("address//text()")
+                        norm = ", ".join(org+adr)
+                        affs.append(norm)
+
+            # 2016-11-29 TD : there should not be any "global" aff tags with RSC
+            # # 2016-11-07 TD : additionally, fetch the "global" affiliation(s) -- start
+            # xp = "//aff[not(@id)]"
+            # aff_elements = self.xml.xpath(xp)
+            # for ae in aff_elements:
+            #     contents = ae.xpath("string()")
+            #     norm = " ".join(contents.split())
+            #     affs.append(norm)
+            # # 2016-11-07 TD : "global" affiliation(s) -- end
 
             if len(affs) > 0:
                 con["affiliations"] = affs
