@@ -416,7 +416,11 @@ class RSCMetadataXML(object):
         if raw is not None:
             self.raw = raw
             try:
-                self.xml = etree.fromstring(self.raw)
+                # 2016-11-30 TD : apparently, RSC XML needs to download some entity defs ...
+                #                 FIXME: this could, in principle, be handled locally by the 
+                #                 xmlcatalog mechanism... for the time being, let it be as it is.
+                parser = etree.XMLParser(load_dtd=True, no_network=False)
+                self.xml = etree.fromstring(self.raw, parser)
             except:
                 raise JATSException("Unable to parse XML", self.raw)
         elif xml is not None:
