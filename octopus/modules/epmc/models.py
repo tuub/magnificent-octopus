@@ -106,23 +106,28 @@ class EPMCMetadataXML(object):
             ao = {}
 
             fn = ael.find("fullName")
-            if fn is not None:
+            # 2017-06-07 TD : catch if element tag is really empty
+            if fn is not None and fn.text is not None:
                 ao["fullName"] = fn.text
 
             first = ael.find("firstName")
-            if first is not None:
+            # 2017-06-07 TD : catch if element tag is really empty
+            if first is not None and first.text is not None:
                 ao["firstName"] = first.text
 
             last = ael.find("lastName")
-            if last is not None:
+            # 2017-06-07 TD : catch if element tag is really empty
+            if last is not None and last.text is not None:
                 ao["lastName"] = last.text
 
             inits = ael.find("initials")
-            if inits is not None:
+            # 2017-06-07 TD : catch if element tag is really empty
+            if inits is not None and inits.text is not None:
                 ao["initials"] = inits.text
 
             aff = ael.find("affiliation")
-            if aff is not None:
+            # 2017-06-07 TD : catch if element tag is really empty
+            if aff is not None and aff.text is not None:
                 ao["affiliation"] = aff.text
 
             if len(ao.keys()) > 0:
@@ -345,16 +350,19 @@ class JATS(object):
             name = c.find("name")
             if name is not None:
                 sn = name.find("surname")
-                if sn is not None:
+                # 2017-06-07 TD : catch if element tag is really empty!
+                if sn is not None and sn.text is not None:
                     con["surname"] = sn.text
 
                 gn = name.find("given-names")
-                if gn is not None:
+                # 2017-06-07 TD : catch if element tag is really empty!
+                if gn is not None and gn.text is not None:
                     con["given-names"] = gn.text
 
             # see if there's an email address
             email = c.find("email")
-            if email is not None:
+            # 2017-06-07 TD : catch if element tag is really empty!
+            if email is not None and email.text is not None:
                 con["email"] = email.text
 
             # now do the affiliations (by value and by (x)reference)
@@ -578,11 +586,13 @@ class RSCMetadataXML(object):
             name = c.find("persname")
             if name is not None:
                 sn = name.find("surname")
-                if sn is not None:
+                # 2017-06-07 TD : catch if element tag is really empty
+                if sn is not None and sn.text is not None:
                     con["surname"] = sn.text
 
                 fn = name.find("fname")
-                if fn is not None:
+                # 2017-06-07 TD : catch if element tag is really empty
+                if fn is not None and fn.text is not None:
                     con["fname"] = fn.text
 
             # 2016-11-28 TD : note that, with RSC, the email is *always* in the 'aff' tag! 
