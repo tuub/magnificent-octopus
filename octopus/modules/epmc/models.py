@@ -39,7 +39,7 @@ class EPMCMetadataXML(object):
 
     @property
     def title(self):
-        return xutil.xp_first_text(self.xml, "title")
+        return xutil.xp_first_text(self.xml, "string(title)")
 
     @property
     def publication_type(self):
@@ -216,7 +216,7 @@ class JATS(object):
 
     @property
     def title(self):
-        return xutil.xp_first_text(self.xml, "//title-group/article-title")
+        return xutil.xp_first_text(self.xml, "string(//title-group/article-title)")
 
     @property
     def is_aam(self):
@@ -436,7 +436,7 @@ class RSCMetadataXML(object):
 
     @property
     def title(self):
-        return xutil.xp_first_text(self.xml, "//art-front/titlegrp/title")
+        return xutil.xp_first_text(self.xml, "string(//art-front/titlegrp/title)")
 
     @property
     def is_aam(self):
