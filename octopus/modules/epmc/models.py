@@ -39,6 +39,7 @@ class EPMCMetadataXML(object):
 
     @property
     def title(self):
+        # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
         return xutil.xp_first_text(self.xml, "string(title)")
 
     @property
@@ -216,6 +217,7 @@ class JATS(object):
 
     @property
     def title(self):
+        # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
         return xutil.xp_first_text(self.xml, "string(//title-group/article-title)")
 
     @property
@@ -436,6 +438,7 @@ class RSCMetadataXML(object):
 
     @property
     def title(self):
+        # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
         return xutil.xp_first_text(self.xml, "string(//art-front/titlegrp/title)")
 
     @property
