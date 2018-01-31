@@ -39,8 +39,9 @@ class EPMCMetadataXML(object):
 
     @property
     def title(self):
+        # 2018-01-31 TD : adding the default value "no title"
         # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
-        return xutil.xp_first_text(self.xml, "string(title)")
+        return xutil.xp_first_text(self.xml, "string(title)", default="no title")
 
     @property
     def publication_type(self):
@@ -217,8 +218,9 @@ class JATS(object):
 
     @property
     def title(self):
+        # 2018-01-31 TD : adding the default value "no title"
         # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
-        return xutil.xp_first_text(self.xml, "string(//title-group/article-title)")
+        return xutil.xp_first_text(self.xml, "string(//title-group/article-title)", default="no title")
 
     @property
     def is_aam(self):
@@ -438,8 +440,9 @@ class RSCMetadataXML(object):
 
     @property
     def title(self):
+        # 2018-01-31 TD : adding the default value "no title"
         # 2018-01-30 TD : insert the string(...) to handle html-in-xml cases correctly
-        return xutil.xp_first_text(self.xml, "string(//art-front/titlegrp/title)")
+        return xutil.xp_first_text(self.xml, "string(//art-front/titlegrp/title)", default="no title")
 
     @property
     def is_aam(self):
