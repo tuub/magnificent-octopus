@@ -44,8 +44,13 @@ def fromstring(s):
 
 def xp_first_text(element, xpath, default=None):
     el = element.xpath(xpath)
-    if len(el) > 0:
-        return el[0].text
+    if type(el)==list:
+        if len(el) > 0:
+            return el[0].text
+    # 2018-02-07 TD : adding the case if xpath="string(...)" is passed
+    elif type(el)==etree._ElementUnicodeResult:
+        if len(el) > 0:
+            return el    
     return default
 
 def xp_texts(element, xpath):
