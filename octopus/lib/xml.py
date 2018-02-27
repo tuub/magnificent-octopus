@@ -54,7 +54,7 @@ def xp_first_text(element, xpath, default=None):
     elif type(el)==etree._ElementStringResult:
         if len(el) > 0:
             return el
-    else
+    else:
         return default
 
     return default
