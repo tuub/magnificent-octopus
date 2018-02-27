@@ -50,7 +50,13 @@ def xp_first_text(element, xpath, default=None):
     # 2018-02-07 TD : adding the case if xpath="string(...)" is passed
     elif type(el)==etree._ElementUnicodeResult:
         if len(el) > 0:
-            return el    
+            return el
+    elif type(el)==etree._ElementStringResult:
+        if len(el) > 0:
+            return el
+    else
+        return default
+
     return default
 
 def xp_texts(element, xpath):
