@@ -372,11 +372,21 @@ class JATS(object):
             # now do the affiliations (by value and by (x)reference)
             affs = []
 
-            aff = c.find("aff")
-            if aff is not None:
-                contents = aff.xpath("string()")
+            #
+            # 2018-08-02 TD : an author can have more than _one_ affiliation! Fixed.
+            #
+            #aff = c.find("aff")
+            #if aff is not None:
+            #    contents = aff.xpath("string()")
+            #    norm = " ".join(contents.split())
+            #    affs.append(norm)
+            #
+            aff_elements = c.findall("aff")
+            for ae in aff_elements:
+                contents = ae.xpath("string()")
                 norm = " ".join(contents.split())
                 affs.append(norm)
+            #
 
             xrefs = c.findall("xref")
             for x in xrefs:
