@@ -100,6 +100,7 @@ class EPMCMetadataXML(object):
         <firstName>Eleonora</firstName>
         <lastName>Cerasoli</lastName>
         <initials>E</initials>
+        <authorId type="ORCID">0000-0000-0000-0000</authorId>
         <affiliation>Biotechnology Department, National Physical Laboratory Teddington, UK.</affiliation>
         """
         author_elements = self.xml.xpath("//authorList/author")
@@ -126,6 +127,12 @@ class EPMCMetadataXML(object):
             # 2017-06-07 TD : catch if element tag is really empty
             if inits is not None and inits.text is not None:
                 ao["initials"] = inits.text
+
+            # 2018-10-17 TD : fetch the author's ORCID if provided
+            orcid = ael.find("authorId[@type='ORCID']")
+            if orcid is not None and orcid.text is not None:
+                ao["orcid"] = orcid.text
+            # 2018-10-17 TD
 
             aff = ael.find("affiliation")
             # 2017-06-07 TD : catch if element tag is really empty
@@ -362,6 +369,12 @@ class JATS(object):
                 # 2017-06-07 TD : catch if element tag is really empty!
                 if gn is not None and gn.text is not None:
                     con["given-names"] = gn.text
+
+            # 2018-10-17 TD : add the contrib-id with @contrib-id-type="orcid"
+            # see if there's an ORCID
+            orcid = c.find("contrib-id[@contrib-id-type='orcid']")
+            if orcid is not None and orcid.text is not None:
+                con["orcid"] = orcid.text
 
             # see if there's an email address
             email = c.find("email")
@@ -610,6 +623,12 @@ class RSCMetadataXML(object):
                 # 2017-06-07 TD : catch if element tag is really empty
                 if fn is not None and fn.text is not None:
                     con["fname"] = fn.text
+
+            # 2018-10-17 TD : fetch the author's ORCID if provided by the rsc xml
+            # see if there's an ORCID (as attrib: <person orcid="...">)
+            orcid = c.attrib.get("orcid")
+            if orcid is not None and orcid != "":
+                con["orcid"] = orcid
 
             # 2016-11-28 TD : note that, with RSC, the email is *always* in the 'aff' tag! 
             # # see if there's an email address
