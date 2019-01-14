@@ -212,6 +212,8 @@ class EPMCMetadata(dataobj.DataObj):
 
 class JATS(object):
     def __init__(self, raw=None, xml=None):
+        self.months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                       "JUL", "AUG", "SEP", "OCT", "NOV", "DEC", "UNA"]
         self.raw = None
         self.xml = None
         if raw is not None:
@@ -342,6 +344,12 @@ class JATS(object):
         ob = xutil.objectify(element)
         year = ob.get("year")
         month = ob.get("month", "01")
+        # 2019-01-14 TD : Although it is not compliant with JATS at all, sometimes full month 
+        #                 names are used in date fields and, thus, a simple conversion to the 
+        #                 corresponding month /number/ helps avoiding silly errors here a lot.  
+        #                 Note that 'Unassigned' is also mapped to '01' here.
+        if month.upper()[:3] in self.months:
+            month = str( 1 + self.months.index(month.upper()[:3]) % 12 )
         day = ob.get("day", "01")
         if len(month) < 2:
             month = "0" + month
