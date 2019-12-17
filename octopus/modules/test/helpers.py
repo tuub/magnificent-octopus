@@ -91,21 +91,25 @@ def diff_dicts(d1, d2, d1_label='d1', d2_label='d2', print_unchanged=False):
     :param d2: Second dict - we compare against this one
     :param d1_label: Will be used instead of "d1" in debugging output to make it more helpful.
     :param d2_label: Will be used instead of "d2" in debugging output to make it more helpful.
-    :param print_unchanged: - should we print(set of unchanged keys (can be long and useless). Default: False.)
+    :param print_unchanged: - should we print set of unchanged keys (can be long and useless). Default: False.
     :return: nothing, prints results to STDOUT
     """
     differ = dictdiffer.DictDiffer(d1, d2)
     print('Added :: keys present in {d1} which are not in {d2}'.format(d1=d1_label, d2=d2_label))
     print(differ.added())
+    print()
     print('Removed :: keys present in {d2} which are not in {d1}'.format(d1=d1_label, d2=d2_label))
     print(differ.removed())
+    print()
     print('Changed :: keys which are the same in {d1} and {d2} but whose values are different'.format(d1=d1_label, d2=d2_label))
     print(differ.changed())
+    print()
     if differ.changed():
         print('Changed values :: the values of keys which have changed. Format is as follows:')
         print('  Key name:')
         print('    value in {d1}'.format(d1=d1_label))
         print('    value in {d2}'.format(d2=d2_label))
+        print()
         for key in differ.changed():
             print(' ', key + ':')
             print('   ', d1[key])
