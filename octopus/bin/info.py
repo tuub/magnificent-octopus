@@ -4,7 +4,8 @@ def print_config():
     keys.sort()
     for k in keys:
         v = app.config.get(k)
-        print k, "=", v
+        print(k, "=", v)
+
 
 if __name__ == "__main__":
     import argparse
