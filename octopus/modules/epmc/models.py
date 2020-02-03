@@ -139,7 +139,7 @@ class EPMCMetadataXML(object):
             if aff is not None and aff.text is not None:
                 ao["affiliation"] = aff.text
 
-            if len(ao.keys()) > 0:
+            if len(list(ao.keys())) > 0:
                 obs.append(ao)
 
         return obs
@@ -159,7 +159,7 @@ class EPMCMetadataXML(object):
             if ag is not None:
                 go["agency"] = ag.text
 
-            if len(go.keys()) > 0:
+            if len(list(go.keys())) > 0:
                 obs.append(go)
 
         return obs
@@ -432,7 +432,7 @@ class JATS(object):
             if len(affs) > 0:
                 con["affiliations"] = affs
 
-            if len(con.keys()) > 0:
+            if len(list(con.keys())) > 0:
                 obs.append(con)
 
         return obs
@@ -677,7 +677,7 @@ class RSCMetadataXML(object):
             if len(affs) > 0:
                 con["affiliations"] = affs
 
-            if len(con.keys()) > 0:
+            if len(list(con.keys())) > 0:
                 obs.append(con)
 
         return obs

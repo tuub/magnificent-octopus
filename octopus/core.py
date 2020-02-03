@@ -22,7 +22,7 @@ def create_app():
     setup_jinja(app)
     module_setup(app)
     # login_manager.setup_app(app)
-    print("App created at ", datetime.now().strftime("%H:%M:%S %d-%m-%Y"))
+    print(("App created at ", datetime.now().strftime("%H:%M:%S %d-%m-%Y")))
     return app
 
 
@@ -36,7 +36,7 @@ def configure_app(app):
         root_config = os.path.abspath(root_config)
 
     if os.path.exists(root_config):
-        print("Loading root config from", root_config)
+        print(("Loading root config from", root_config))
         app.config.from_pyfile(root_config)
     else:
         raise Exception("Root config did not exist at " + root_config + ".  You may set one with the APP_CONFIG environment variable")
@@ -52,7 +52,7 @@ def configure_app(app):
     for sp in statics:
         if not os.path.isabs(sp):
             sp = os.path.join(BASE_PATH, sp)
-        print("Specifying static directory", sp)
+        print(("Specifying static directory", sp))
         nps.append(sp)
     app.config["STATIC_PATHS"] = nps
 
@@ -61,10 +61,10 @@ def add_configuration(app, cf):
     if not os.path.isabs(cf):
         cf = os.path.join(BASE_PATH, cf)
     if os.path.exists(cf):
-        print("Loading config from", cf)
+        print(("Loading config from", cf))
         app.config.from_pyfile(cf)
     else:
-        print("WARNING: no config file at", cf)
+        print(("WARNING: no config file at", cf))
 
 
 def setup_jinja(app):
@@ -74,7 +74,7 @@ def setup_jinja(app):
         for tp in template_paths:
             if not os.path.isabs(tp):
                 tp = os.path.join(BASE_PATH, tp)
-            print("Registering Template Path", tp)
+            print(("Registering Template Path", tp))
             choices.append(jinja2.FileSystemLoader(tp))
         my_loader = jinja2.ChoiceLoader(choices)
         app.jinja_loader = my_loader
@@ -127,4 +127,4 @@ def initialise():
         if fn is not None:
             fn()
 
-    print("App initialised at ", datetime.now().strftime("%H:%M:%S %d-%m-%Y"))
+    print(("App initialised at ", datetime.now().strftime("%H:%M:%S %d-%m-%Y")))
