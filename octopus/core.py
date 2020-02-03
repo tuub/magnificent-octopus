@@ -1,6 +1,6 @@
 import os, jinja2
 from flask import Flask
-from urllib import unquote
+from urllib.parse import unquote
 from datetime import datetime
 
 #from flask.ext.login import LoginManager, current_user
