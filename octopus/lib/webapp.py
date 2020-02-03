@@ -2,7 +2,7 @@ import re, os
 from unicodedata import normalize
 from functools import wraps
 from flask import request, current_app, flash, redirect, send_from_directory, abort, render_template, make_response
-from urlparse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin
 
 from octopus.core import app
 
