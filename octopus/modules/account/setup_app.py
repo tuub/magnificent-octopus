@@ -1,4 +1,4 @@
-from flask.ext.login import LoginManager
+from flask_login import LoginManager
 
 def setup_app(app):
     if app.config.get("ACCOUNT_ENABLE", False):

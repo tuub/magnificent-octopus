@@ -4,7 +4,7 @@ from wtforms.fields import StringField, HiddenField, PasswordField
 from octopus.modules.form.context import FormContext, Renderer
 from octopus.modules.account.factory import AccountFactory
 from octopus.modules.account import exceptions
-from flask.ext.login import current_user
+from flask_login import current_user
 from flask import url_for, request
 from octopus.core import app
 from octopus.lib import mail

@@ -2,7 +2,7 @@ import json, urllib.request, urllib.error, urllib.parse
 from esprit.models import Query
 
 from flask import Blueprint, request, abort, make_response
-from flask.ext.login import current_user
+from flask_login import current_user
 
 from octopus.core import app
 from octopus.lib import webapp, plugin

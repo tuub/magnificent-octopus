@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 import uuid
 
-from flask.ext.login import UserMixin
-from werkzeug import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from octopus.core import app
 from octopus.modules.account.authorise import Authorise
