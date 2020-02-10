@@ -5,7 +5,7 @@ src*
 .Python
 build/*
 dist/*
-
+venv/
 app.cfg
 .idea
 
