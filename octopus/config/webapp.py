@@ -2,7 +2,7 @@
 HOST = "0.0.0.0"
 
 # set the webapp mode to debug on startup?
-DEBUG = False
+DEBUG = True
 
 # port to deploy the webapp on
 PORT = 5000
