@@ -74,11 +74,11 @@ class ClCsv():
                 self.input_encoding = code
                 return
             except CsvReadException as e:
-                app.logger.info(e.message)
+                app.logger.info(e)
             except CsvStructureException as e:
-                app.logger.info(e.message)
+                app.logger.info(e)
             except Exception as e:
-                app.logger.info(e.message)
+                app.logger.info(e)
         # if we get to here, we were unable to read the file using any method
         raise CsvReadException("Unable to find a codec which can parse the file correctly")
 
