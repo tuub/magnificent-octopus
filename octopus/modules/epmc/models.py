@@ -35,7 +35,7 @@ class EPMCMetadataXML(object):
         if self.raw is not None:
             return self.raw
         elif self.xml is not None:
-            return etree.tostring(self.xml, encoding="unicode")
+            return etree.tostring(self.xml)
 
     @property
     def title(self):
@@ -248,9 +248,9 @@ class JATS(object):
 
         # get the paragraph(s) describing the licence
         para = self.xml.xpath("//license/license-p")
-        out = ""
+        out = "".encode('utf-8')
         for p in para:
-            out += etree.tostring(p).decode()
+            out += etree.tostring(p)
 
         return type, url, out
 
@@ -441,7 +441,7 @@ class JATS(object):
         if self.raw is not None:
             return self.raw
         elif self.xml is not None:
-            return etree.tostring(self.xml,encoding="unicode")
+            return etree.tostring(self.xml)
 
 
 #
@@ -686,4 +686,4 @@ class RSCMetadataXML(object):
         if self.raw is not None:
             return self.raw
         elif self.xml is not None:
-            return etree.tostring(self.xml, encoding="unicode")
+            return etree.tostring(self.xml)
