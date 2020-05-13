@@ -78,7 +78,7 @@ class StoreLocal(Store):
     def get(self, container_id, target_name):
         cpath = os.path.join(self.dir, container_id, target_name)
         if os.path.exists(cpath) and os.path.isfile(cpath):
-            f = codecs.open(cpath, "r")
+            f = codecs.open(cpath, "rb")
             return f
 
     def delete(self, container_id, target_name=None):
