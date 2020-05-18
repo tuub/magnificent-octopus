@@ -41,7 +41,7 @@ class ClCsv():
 
         # Get an open file object from the given file_path or file object
         if file_path is not None:
-            if type(file_path) == file:
+            if hasattr(file_path, 'read'):
                 self.file_path = file_path.name
                 # NOTE: if you have passed in a file object, it MUST work - as in, it must be set to
                 # read the right encoding, and everything.  We will not try to parse it again if it
