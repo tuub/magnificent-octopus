@@ -368,7 +368,7 @@ class UTF8Recoder:
         raw = val.encode("utf-8")
         if raw.startswith(codecs.BOM_UTF8):
             raw = raw.replace(codecs.BOM_UTF8, '', 1)
-        return raw
+        return raw.decode("utf-8")
 
 class UnicodeReader:
     """
