@@ -409,7 +409,7 @@ class UnicodeWriter:
                 s = ''
             if not isinstance(s, str):
                 s = str(s)
-            encoded_row.append(s.encode(self.encoding))
+            encoded_row.append(s)
         self.writer.writerow(encoded_row)
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
