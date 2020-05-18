@@ -383,7 +383,7 @@ class UnicodeReader:
 
     def __next__(self):
         row = next(self.reader)
-        return [str(s, self.output_encoding) for s in row]
+        return row
 
     def __iter__(self):
         return self
