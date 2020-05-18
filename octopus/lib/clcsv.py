@@ -69,9 +69,9 @@ class ClCsv():
         for code in codes:
             try:
                 file_object = codecs.open(file_path, 'r+b', encoding=code)
-                self._read_file(file_object)
                 self.file_object = file_object
                 self.input_encoding = code
+                self._read_file(file_object)
                 return
             except CsvReadException as e:
                 app.logger.info(e)
