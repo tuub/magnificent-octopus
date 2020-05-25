@@ -28,7 +28,7 @@ class FunctionalTestServer(TestCase):
 
 
 def make_config(cfg, filepath):
-    with codecs.open(filepath, "wb") as out:
+    with codecs.open(filepath, "w") as out:
         for k, v in cfg.items():
             if isinstance(v, str):
                 # if the value is a string, wrap it in quotes
@@ -39,6 +39,7 @@ def make_config(cfg, filepath):
 
             # NOTE: this would not handle dicts and lists, so you might get errors, in which
             # case you'll need to work out what to do next
+    out.close()
 
 
 def get_first_free_port():

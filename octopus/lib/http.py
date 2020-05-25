@@ -173,7 +173,7 @@ def get_stream(url, retries=None, back_off_factor=None, max_back_off=None, timeo
             raise SizeExceededException("Size as announced by Content-Type header is larger than maximum allowed size")
 
     downloaded_bytes = 0
-    content = ''
+    content = b''
     chunk_no = 0
 
     if read_stream:
