@@ -339,9 +339,10 @@ class DataObj(object):
 
         # if the struct contains a reference to the path, always return something, even if it is None - don't raise an AttributeError
         kwargs = construct_kwargs(type, "get", instructions)
-        coerce_fn = self._coerce_map.get(instructions.get("coerce"))
-        if coerce_fn is not None:
-            kwargs["coerce"] = coerce_fn
+        if instructions is not None:
+            coerce_fn = self._coerce_map.get(instructions.get("coerce"))
+            if coerce_fn is not None:
+                kwargs["coerce"] = coerce_fn
 
         if type == "field":
             return self._get_single(path, **kwargs)
@@ -411,9 +412,10 @@ class DataObj(object):
                 return False
 
         kwargs = construct_kwargs(type, "set", instructions)
-        coerce_fn = self._coerce_map.get(instructions.get("coerce"))
-        if coerce_fn is not None:
-            kwargs["coerce"] = coerce_fn
+        if instructions is not None:
+            coerce_fn = self._coerce_map.get(instructions.get("coerce"))
+            if coerce_fn is not None:
+                kwargs["coerce"] = coerce_fn
 
         if type == "field":
             self._set_single(path, value, **kwargs)
