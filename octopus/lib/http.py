@@ -1,6 +1,6 @@
 from octopus.core import app
 import requests, time, urllib.request, urllib.parse, urllib.error, json
-from io import StringIO
+from io import BytesIO
 
 class SizeExceededException(Exception):
     pass
@@ -204,7 +204,7 @@ class MockResponse(object):
         self.status_code = status
         self._body = body
         self._headers = headers
-        self._stream = StringIO(body)
+        self._stream = BytesIO(body)
 
     def json(self):
         return json.loads(self._body)
@@ -224,7 +224,7 @@ class MockResponse(object):
     def iter_content(self, chunk_size=1024):
         while True:
             b = self._stream.read(chunk_size)
-            if b == "":
+            if b == b'':
                 # we have reached the end of the file
                 break
             yield b
